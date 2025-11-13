@@ -69,11 +69,6 @@ public class RandomSpawner : MonoBehaviour
         // Creation of the object
         GameObject spawned = Instantiate(prefabToSpawn, spawnPos, Quaternion.identity);
 
-        // Mark the object
-        if (spawned.GetComponent<SpawnedObjectTag>() == null)
-        {
-            spawned.AddComponent<SpawnedObjectTag>();
-        }
     }
 
     private Vector3 GetRandomPointInBox(BoxCollider box)
@@ -88,9 +83,4 @@ public class RandomSpawner : MonoBehaviour
 
         return new Vector3(x, y, z);
     }
-}
-
-public class SpawnedObjectTag : MonoBehaviour
-{
-    // Tag for object to be after destroy
 }

@@ -17,8 +17,9 @@ public class DestructionZone : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         // Check object is spawned
-        if (other.TryGetComponent(out SpawnedObjectTag spawnedTag))
+        if (other.gameObject.CompareTag("Inappropriate")|| (other.gameObject.CompareTag("Respawn"))) 
         {
+        
             // Activation of the event to destroy
             OnObjectDestroyed?.Invoke(other.gameObject);
 
