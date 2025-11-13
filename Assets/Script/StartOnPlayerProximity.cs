@@ -34,6 +34,7 @@ public class StartOnPlayerProximity : MonoBehaviour
         Gizmos.color = Color.red;
         Gizmos.DrawSphere(transform.position, 0.1f);
     }
+#endif
 }
-    #endif
-        
+
+
