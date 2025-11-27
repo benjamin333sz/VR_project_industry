@@ -3,6 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using static UnityEngine.InputManagerEntry;
 
 public class ScorePopupManager : MonoBehaviour
 {
@@ -10,6 +11,8 @@ public class ScorePopupManager : MonoBehaviour
     [Header("Scoring")]
     public int BonusPoint=1;
     public int MalusPoint=2;
+    public int BonusPointBin = 10;
+    public int MalusPointBin = 5;
 
     [Header("Reference UI (World Space Canva for VR)")]
     public TextMeshProUGUI bonusText;
@@ -38,6 +41,12 @@ public class ScorePopupManager : MonoBehaviour
             zone.OnBonusObjectDestroyed.AddListener(OnBonusObjectDestroyed);
             zone.OnMalusObjectDestroyed.AddListener(OnMalusObjectDestroyed);
         }
+        var zonesGood = FindObjectsByType<DestructionZoneGood>(FindObjectsSortMode.None);
+        foreach (var zoneGood in zonesGood)
+        {
+            zoneGood.OnBonusObjectBinDestroyed.AddListener(OnBonusObjectBinDestroyed);
+            zoneGood.OnMalusObjectBinDestroyed.AddListener(OnMalusObjectBinDestroyed);
+        }
         if (scoreManager == null)
             scoreManager = FindFirstObjectByType<ScoreManager>();
     }
@@ -52,6 +61,18 @@ public class ScorePopupManager : MonoBehaviour
     {
         ShowPopup(malusText, $"-{MalusPoint}", Color.red, ref malusCoroutine);
         scoreManager?.AddScore(-MalusPoint);
+    }
+
+    public void OnBonusObjectBinDestroyed(GameObject go)
+    {
+        ShowPopup(bonusText, $"+{BonusPointBin}", Color.green, ref bonusCoroutine);
+        scoreManager?.AddScore(BonusPointBin);
+    }
+
+    public void OnMalusObjectBinDestroyed(GameObject go)
+    {
+        ShowPopup(malusText, $"-{MalusPointBin}", Color.red, ref malusCoroutine);
+        scoreManager?.AddScore(-MalusPointBin);
     }
 
     void ShowPopup(TextMeshProUGUI target, string message, Color color, ref Coroutine running)
