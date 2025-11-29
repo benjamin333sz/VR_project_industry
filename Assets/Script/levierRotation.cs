@@ -1,35 +1,96 @@
 using UnityEngine;
+using UnityEngine.XR.Interaction.Toolkit;
+using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
-public class levierRotation : MonoBehaviour
+public class LeverRotationXR : MonoBehaviour
 {
+    [Header("References")]
     public Transform leverHandle;
-    [Range(-70,70)]public float debugHandAngle;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public XRSimpleInteractable interactable;
+    public TreadmillsController treadmillController;
+
+    [Header("Limits")]
+    public float minAngle = -60f;
+    public float maxAngle = 60f;
+
+    [Header("Interaction Settings")]
+    public float sensitivity = 1.0f;
+
+    private Transform currentHand;
+    private bool isGrabbed = false;
+
+    private float initialHandAngle;
+    private float initialLeverAngle;
+
+    private void OnEnable()
     {
-        
+        interactable.selectEntered.AddListener(OnGrab);
+        interactable.selectExited.AddListener(OnRelease);
     }
 
-    // Update is called once per frame
-    void Update()
+    private void Start()
     {
-        // Mes calculs
-        // Aboutissent a un angle
-        float handAngle = ComputeHandAngle(leverHandle);
-        SetLeverAngle(handAngle);
-        // avec des quaternions
-        leverHandle.eulerAngles = new Vector3(handAngle, 0, 0); // euler angles
-        float handAngleDebug = debugHandAngle;
+        if (treadmillController == null)
+            treadmillController = FindFirstObjectByType<TreadmillsController>();
+    }
+
+
+    private void OnDisable()
+    {
+        interactable.selectEntered.RemoveListener(OnGrab);
+        interactable.selectExited.RemoveListener(OnRelease);
+    }
+
+    private void OnGrab(SelectEnterEventArgs args)
+    {
+        isGrabbed = true;
+        currentHand = args.interactorObject.transform;
+
+        initialHandAngle = ComputeHandAngle(currentHand);
+
+        initialLeverAngle = leverHandle.localEulerAngles.x;
+        if (initialLeverAngle > 180) initialLeverAngle -= 360;
+    }
+
+    private void OnRelease(SelectExitEventArgs args)
+    {
+        isGrabbed = false;
+        currentHand = null;
+    }
+
+    private void Update()
+    {
+        if (isGrabbed && currentHand != null)
+        {
+            float angle = ComputeHandAngle(currentHand);
+
+            float delta = (angle - initialHandAngle) * sensitivity;
+            float newAngle = Mathf.Clamp(initialLeverAngle + delta, minAngle, maxAngle);
+
+            SetLeverAngle(newAngle);
+            UpdateTreadmillSpeed(newAngle);
+        }
     }
 
     float ComputeHandAngle(Transform hand)
     {
-        // FALSE IL FAUT RETROUVER LA BONNE FORMULE
-        return Vector3.SignedAngle(hand.position,transform.up,transform.forward);
+        Vector3 localPos = transform.InverseTransformPoint(hand.position);
+        return Mathf.Atan2(localPos.y, localPos.z) * Mathf.Rad2Deg;
     }
 
     void SetLeverAngle(float angle)
     {
-        leverHandle.rotation = Quaternion.Euler(angle, 0, 0);
+        leverHandle.localRotation = Quaternion.Euler(angle, 0f, 0f);
+    }
+
+    void UpdateTreadmillSpeed(float leverAngle)
+    {
+        if (treadmillController == null) { 
+            Debug.LogWarning("TreadmillsController reference is missing.");
+            return; 
+        } 
+
+        float t = Mathf.InverseLerp(minAngle, maxAngle, leverAngle);
+        treadmillController.SetSpeed(t);
     }
 }
