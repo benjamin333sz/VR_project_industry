@@ -3,7 +3,6 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using static UnityEngine.InputManagerEntry;
 
 public class ScorePopupManager : MonoBehaviour
 {
