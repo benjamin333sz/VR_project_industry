@@ -25,6 +25,13 @@ public class ScorePopupManager : MonoBehaviour
     [Header("Global Score")]
     public ScoreManager scoreManager;
 
+    [Header("Particles")]
+    public ParticleSystem bonusParticlesPrefab;
+    public ParticleSystem malusParticlesPrefab;
+    public Vector3 particleSpawnOffset = Vector3.zero;
+    // fallback delay if particle lifetime calculation is not reliable
+    public float particleAutoDestroyDelay = 5f;
+
     Coroutine bonusCoroutine;
     Coroutine malusCoroutine;
     void Awake()
@@ -53,24 +60,28 @@ public class ScorePopupManager : MonoBehaviour
     public void OnBonusObjectDestroyed(GameObject go)
     {
         ShowPopup(bonusText, $"+{BonusPoint}", Color.green, ref bonusCoroutine);
+        SpawnParticles(go, bonusParticlesPrefab, Color.green);
         scoreManager?.AddScore(BonusPoint);
     }
 
     public void OnMalusObjectDestroyed(GameObject go)
     {
         ShowPopup(malusText, $"-{MalusPoint}", Color.red, ref malusCoroutine);
+        SpawnParticles(go, malusParticlesPrefab, Color.red);
         scoreManager?.AddScore(-MalusPoint);
     }
 
     public void OnBonusObjectBinDestroyed(GameObject go)
     {
         ShowPopup(bonusText, $"+{BonusPointBin}", Color.green, ref bonusCoroutine);
+        SpawnParticles(go, bonusParticlesPrefab, Color.green);
         scoreManager?.AddScore(BonusPointBin);
     }
 
     public void OnMalusObjectBinDestroyed(GameObject go)
     {
         ShowPopup(malusText, $"-{MalusPointBin}", Color.red, ref malusCoroutine);
+        SpawnParticles(go, malusParticlesPrefab, Color.red);
         scoreManager?.AddScore(-MalusPointBin);
     }
 
@@ -111,5 +122,40 @@ public class ScorePopupManager : MonoBehaviour
         target.rectTransform.localPosition = startPos;
         target.gameObject.SetActive(false);
         target.color = startColor;
+    }
+
+    void SpawnParticles(GameObject origin, ParticleSystem prefab, Color tint)
+    {
+        if (prefab == null || origin == null) return;
+
+        // Instantiate at origin + offset
+        ParticleSystem instance = Instantiate(prefab, origin.transform.position + particleSpawnOffset, Quaternion.identity);
+        // Try to tint the particle system
+        try
+        {
+            var main = instance.main;
+            main.startColor = tint;
+            instance.Play();
+
+            // Compute a safe destroy time from duration + lifetime; fallback to particleAutoDestroyDelay
+            float destroyAfter = particleAutoDestroyDelay;
+            try
+            {
+                float dur = main.duration;
+                float lifetimeMax = 0f;
+                var lifetimeCurve = main.startLifetime;
+                // attempt to read the constantMax (works for MinMaxCurve)
+                lifetimeMax = lifetimeCurve.constantMax;
+                destroyAfter = dur + lifetimeMax + 0.1f;
+            }
+            catch { /* ignore and use fallback */ }
+
+            Destroy(instance.gameObject, destroyAfter);
+        }
+        catch
+        {
+            // If anything fails, ensure the instance is still destroyed later
+            Destroy(instance.gameObject, particleAutoDestroyDelay);
+        }
     }
 }
