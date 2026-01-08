@@ -22,6 +22,8 @@ public class LeverRotationXR : MonoBehaviour
     private float initialHandAngle;
     private float initialLeverAngle;
 
+    private float lastNormalizedSpeed = 0f;
+
     private void OnEnable()
     {
         interactable.selectEntered.AddListener(OnGrab);
@@ -56,6 +58,9 @@ public class LeverRotationXR : MonoBehaviour
     {
         isGrabbed = false;
         currentHand = null;
+        if (treadmillController != null)
+            treadmillController.SetTargetSpeed01(lastNormalizedSpeed);
+
     }
 
     private void Update()
@@ -66,9 +71,11 @@ public class LeverRotationXR : MonoBehaviour
 
             float delta = (angle - initialHandAngle) * sensitivity;
             float newAngle = Mathf.Clamp(initialLeverAngle + delta, minAngle, maxAngle);
-
+            float newSpeed =Mathf.InverseLerp(minAngle, maxAngle, newAngle);
+            lastNormalizedSpeed = newSpeed;
             SetLeverAngle(newAngle);
-            UpdateTreadmillSpeed(newAngle);
+            UpdateTreadmillSpeed(newSpeed);
+            
         }
     }
 
@@ -83,14 +90,13 @@ public class LeverRotationXR : MonoBehaviour
         leverHandle.localRotation = Quaternion.Euler(angle, 0f, 0f);
     }
 
-    void UpdateTreadmillSpeed(float leverAngle)
+    void UpdateTreadmillSpeed(float newSpeed)
     {
         if (treadmillController == null) { 
             Debug.LogWarning("TreadmillsController reference is missing.");
             return; 
         } 
 
-        float t = Mathf.InverseLerp(minAngle, maxAngle, leverAngle);
-        treadmillController.SetSpeed(t);
+        treadmillController.SetSpeed(newSpeed);
     }
 }

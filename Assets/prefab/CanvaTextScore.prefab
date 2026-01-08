@@ -118,6 +118,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   BonusPoint: 1
   MalusPoint: 2
+  BonusPointBin: 10
+  MalusPointBin: 5
   bonusText: {fileID: 1825971286850431044}
   malusText: {fileID: 3577307016270166691}
   displayDuration: 1

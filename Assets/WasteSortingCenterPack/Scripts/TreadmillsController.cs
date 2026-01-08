@@ -38,6 +38,10 @@ public class TreadmillsController : MonoBehaviour
 
         treadmillMat.SetFloat("_Speed", speed * MATERIAL_SPEED_MULTIPLIER);
     }
+    public void SetTargetSpeed01(float speed01)
+    {
+        targetSpeed = Mathf.Clamp01(speed01);
+    }
 
     public void SetPaused(bool value)
     {
