@@ -36,23 +36,27 @@ public class ScorePopupManager : MonoBehaviour
     Coroutine malusCoroutine;
     void Awake()
     {
-        // Désactivation initiale
+        // Initialization desactivated texts
         if (bonusText != null) bonusText.gameObject.SetActive(false);
         if (malusText != null) malusText.gameObject.SetActive(false);
 
-        // Trouve toutes les zones de destruction dans la scène
+        // Find all DestructionZones in the scene and subscribe to their events
         var zones = FindObjectsByType<DestructionZone>(FindObjectsSortMode.None);
         foreach (var zone in zones)
         {
             zone.OnBonusObjectDestroyed.AddListener(OnBonusObjectDestroyed);
             zone.OnMalusObjectDestroyed.AddListener(OnMalusObjectDestroyed);
         }
+
+        // Find all DestructionZoneGood in the scene and subscribe to their events
         var zonesGood = FindObjectsByType<DestructionZoneGood>(FindObjectsSortMode.None);
         foreach (var zoneGood in zonesGood)
         {
             zoneGood.OnBonusObjectBinDestroyed.AddListener(OnBonusObjectBinDestroyed);
             zoneGood.OnMalusObjectBinDestroyed.AddListener(OnMalusObjectBinDestroyed);
         }
+
+        // Find ScoreManager if not assigned
         if (scoreManager == null)
             scoreManager = FindFirstObjectByType<ScoreManager>();
     }
@@ -87,11 +91,14 @@ public class ScorePopupManager : MonoBehaviour
 
     void ShowPopup(TextMeshProUGUI target, string message, Color color, ref Coroutine running)
     {
+        // Safety check
         if (target == null) return;
+        // Set text and color
         target.text = message;
         target.color = color;
         target.gameObject.SetActive(true);
 
+        // Restart animation
         if (running != null) StopCoroutine(running);
         running = StartCoroutine(AnimatePopup(target));
     }
@@ -99,7 +106,7 @@ public class ScorePopupManager : MonoBehaviour
 
     IEnumerator AnimatePopup(TextMeshProUGUI target)
     {
-        // Position et alpha initiaux
+        // Start position and alpha
         Vector3 startPos = target.rectTransform.localPosition;
         Vector3 endPos = startPos + Vector3.up * distanceAnimation;
         Color startColor = target.color;
@@ -130,7 +137,6 @@ public class ScorePopupManager : MonoBehaviour
 
         // Instantiate at origin + offset
         ParticleSystem instance = Instantiate(prefab, origin.transform.position + particleSpawnOffset, Quaternion.identity);
-        // Try to tint the particle system
         try
         {
             var main = instance.main;
@@ -154,7 +160,6 @@ public class ScorePopupManager : MonoBehaviour
         }
         catch
         {
-            // If anything fails, ensure the instance is still destroyed later
             Destroy(instance.gameObject, particleAutoDestroyDelay);
         }
     }

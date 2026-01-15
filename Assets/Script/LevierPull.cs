@@ -28,12 +28,14 @@ public class LeverPullXR : MonoBehaviour
     }
     private void OnEnable()
     {
+        // Register event listeners
         interactable.selectEntered.AddListener(OnGrab);
         interactable.selectExited.AddListener(OnRelease);
     }
 
     private void OnGrab(SelectEnterEventArgs args)
     {
+        // Start grabbing the lever handle
         isGrabbed = true;
         currentHand = args.interactorObject.transform;
 
@@ -44,6 +46,7 @@ public class LeverPullXR : MonoBehaviour
         isGrabbed = false;
         currentHand = null;
 
+        // Start returning the lever handle to its initial position
         if (returnCoroutine != null)
             StopCoroutine(returnCoroutine);
         returnCoroutine = StartCoroutine(ReturnHandleToInitialPosition());
@@ -57,6 +60,7 @@ public class LeverPullXR : MonoBehaviour
         Vector3 targetPos = startPos;
         targetPos.y = InitialPosition;
 
+        // Smoothly move the lever handle back to initial position
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
@@ -71,12 +75,14 @@ public class LeverPullXR : MonoBehaviour
 
     Vector3 ComputeHandPos(Transform hand)
     {
+        // Convert hand position to local space of the lever
         Vector3 localPos = transform.InverseTransformPoint(hand.position);
         return localPos;
     }
 
     void MoveHandle(float handPosY)
     {
+        // Clamp the lever handle position within limits
         float clampedY = Mathf.Clamp(handPosY, 0, maxPullDistance);
         Vector3 localPos = leverHandle.localPosition;
         localPos.y = clampedY;
@@ -85,6 +91,7 @@ public class LeverPullXR : MonoBehaviour
 
     void UpdateTreadmillSpeed(bool pause)
     {
+        // Safety check
         if (treadmillController == null)
         {
             Debug.LogWarning("TreadmillsController reference is missing.");
@@ -97,12 +104,14 @@ public class LeverPullXR : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        // Handle lever movement when grabbed
         if (isGrabbed && currentHand != null)
         {
             Vector3 handLocalPos = ComputeHandPos(currentHand);
             MoveHandle(handLocalPos.y);
         }
 
+        // Check lever position to update treadmill speed
         float currentY = leverHandle.localPosition.y;
         if (Mathf.Abs(currentY - InitialPosition) >= maxPullDistance*0.9f)
         {
@@ -110,6 +119,7 @@ public class LeverPullXR : MonoBehaviour
             UpdateTreadmillSpeed(paused);
 
         }
+        // Reset when lever is near initial position
         if (Mathf.Abs(currentY - InitialPosition) <= maxPullDistance * 0.1f)
         {
             paused = false;

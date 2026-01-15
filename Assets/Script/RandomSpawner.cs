@@ -21,8 +21,10 @@ public class RandomSpawner : MonoBehaviour
 
     private void Awake()
     {
+        // get BoxCollider component
         spawnArea = GetComponent<BoxCollider>();
 
+        // error if no BoxCollider found
         if (spawnArea == null)
         {
             Debug.LogError("No BoxCollider found");
@@ -31,6 +33,7 @@ public class RandomSpawner : MonoBehaviour
 
     private void Start()
     {
+        // start spawn routine
         StartCoroutine(SpawnRoutine());
     }
 
@@ -45,6 +48,7 @@ public class RandomSpawner : MonoBehaviour
             // random spawn 
             int objectCount = Random.Range(minObjectsPerSpawn, maxObjectsPerSpawn + 1);
 
+            // spawn objects
             for (int i = 0; i < objectCount; i++)
             {
                 SpawnRandomObject();
@@ -54,6 +58,7 @@ public class RandomSpawner : MonoBehaviour
 
     private void SpawnRandomObject()
     {
+        // Check if prefab available
         if (prefabs == null || prefabs.Length == 0)
         {
             Debug.LogWarning("No prefab given");
